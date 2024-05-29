@@ -1,0 +1,148 @@
+---
+title: "Generative Art"
+author: "Eva Dykaar"
+format: 
+  html: 
+    self-contained: true
+    code-tools: true
+    code-fold: true
+editor: visual
+execute: 
+  echo: true
+  include: true
+  message: false
+  warning: false
+mainfont: garet
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+## Piece Number One
+
+```{r}
+# Source for random numbers: https://art-from-code.netlify.app/day-1/session-1/
+set.seed(1000)
+n <- 500
+num <- tibble(
+  x0 = runif(n),
+  y0 = runif(n),
+  x1 = x0 + runif(n, min = -1, max = 1),
+  y1 = y0 + runif(n, min = -1, max = 1),
+  shade = runif(n), 
+  size = runif(n)
+)
+```
+
+```{r}
+# Source for base code: https://art-from-code.netlify.app/day-1/session-1/
+# Source for changing plot background: https://r-graph-gallery.com/240-custom-layout-background-ggplot2.html
+num |> 
+  ggplot(aes(
+    x = x0,
+    y = y0,
+    xend = x1,
+    yend = y1,
+    colour = shade,
+    size = size
+  )) +
+  geom_point(show.legend = FALSE) +
+  scale_y_continuous(expand = c(0, -1)) +
+  scale_x_continuous(expand = c(0, -1)) + 
+  scale_size(range = c(0, 20)) + 
+  theme_void() +
+  scale_colour_gradientn(colours = c("lightblue", "orange", "purple", "grey")) +
+  theme(
+    plot.background = element_rect(fill = "white"),
+    panel.background = element_rect(fill = "blue")
+  ) + 
+    labs(title = "Bubbles") +
+    theme(
+      plot.title = element_text(
+        face = "italic",
+        color = "blue",
+        size = 15,
+      ))
+```
+
+#### Museum Description
+This piece shows circles placed around the canvas. With the bright colors in this work it is meant to represent summer and imagery of the pool and blowing bubbles during this time. This work is inspired by Danielle Navarro and her work and also Jackson Pollock's splatter painting work that demonstrates the use of negative and positive space in seemly random artwork is very important to creating a cohesive piece. 
+
+#### Code Choices
+In this code I wanted to make the buddles fill up the whole page and used a combination of the scale_x_continous, scale_y_continuous, and scale_size to achieve this look. I also used the colors light blue, orange, purple, and grey with a blue background to remind the audience of summer. 
+
+## Piece Number Two
+
+```{r}
+# Show polygon base function: https://art-from-code.netlify.app/day-1/session-3/
+# Note I made changes to the function!
+
+show_polygon <- function(polygon) {
+  
+  pic <- ggplot(polygon, aes(x, y)) +
+    geom_polygon(colour = "darkred", fill = "pink", show.legend = FALSE, linewidth = 1) + 
+    coord_equal() + 
+    theme_void() +
+    labs(title = "    Connected Hearts") +
+    theme(
+      plot.title = element_text(
+        face = "italic",
+        color = "darkred",
+        size = 15,
+      ))
+  
+  return(pic)
+}
+```
+
+```{r}
+# Heart x and y base function: https://art-from-code.netlify.app/day-1/session-3/
+# Note I made changes to the function!
+
+# heart_x function
+heart_x <- function(angle) {
+  x <- (16 * sin(angle) ^ 3) / 20
+  return(x - mean(x))
+}
+
+# heart_y function
+heart_y <- function(angle) {
+  y <- (13 * cos(angle) - 5 * cos(2 * angle) - 2 * cos(3 * angle) -
+          cos(4 * angle)) / 20
+  return(y - mean(y))
+}
+```
+
+```{r}
+# Source: used chatGPT to scale down the size of the hearts and to create a grid out of the hearts
+
+# scale factor for hearts
+scale_factor <- 0.4
+
+# creating the heart shape with the smaller scale
+heart_shape <- tibble(
+  angle = seq(0, 2 * pi, length.out = 50),
+  x = heart_x(angle) * scale_factor,
+  y = heart_y(angle) * scale_factor
+)
+
+# creating grid
+hearts_grid <- expand.grid(x_shift = seq(1, 5, by = 1),
+                           y_shift = seq(1, 5, by = 1)) |>
+  as_tibble() |>
+  rowwise() |>
+  mutate(data = list(tibble(
+    x = heart_shape$x + x_shift,
+    y = heart_shape$y + y_shift
+  ))) |>
+  unnest(data)
+
+show_polygon(hearts_grid)
+```
+#### Museum Description
+This piece shows hearts connected together with a pink color filling the shapes that appear in between the lines. This piece was inspired from Danielle Navarro and her work with polygons. Each heart is fulled to a certain degree depending on its place in the grid.
+
+#### Code Choices
+In this code I wanted the hearts to look cartoon like so I used a darker pink outline and made the linewidth thick to get that effect. I also made the hearts wide to contribute to the cartoon effect. By sequencing from 1 to 5 for both the x and y values this creates a 5 by 5 grid. 
